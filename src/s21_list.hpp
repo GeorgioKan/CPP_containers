@@ -3,12 +3,12 @@
 
 template <typename T> class s21_list {
 private:
-  T value_type;
-  T &reference;
-  const T &const_reference;
-  ListIterator<T> iterator;
-  ListConstIterator<T> const_iterator;
-  size_t size_type;
+  using value_type = T;
+  using reference = T &;
+  using const_reference = const T &;
+  using iterator = ListIterator<T>;
+  using const_iterator = ListConstIterator<T>;
+  using size_type = size_t;
 
 public:
   // Functions
