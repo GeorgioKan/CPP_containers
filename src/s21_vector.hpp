@@ -84,8 +84,8 @@ s21_vector<T>::s21_vector(const s21_vector &v)
 
 template <typename T>
 s21_vector<T>::s21_vector(std::initializer_list<value_type> const &items)
-    : size_(items.size()), capacity_(items.capacity()),
-      data_(new value_type[items.size()]) {
+    : data_(new value_type[items.size()]), size_(items.size()),
+      capacity_(items.size()) {
   std::copy(items.begin(), items.end(), data_);
 }
 
@@ -98,7 +98,7 @@ template <typename T> s21_vector<T>::s21_vector(s21_vector &&v) {
 template <typename T>
 s21_vector<T> &s21_vector<T>::operator=(s21_vector<T> &&v) noexcept {
   if (this != &v) {
-    data_ delete[];
+    delete[] data_;
 
     data_ = v.data_;
     size_ = v.size_;
@@ -112,7 +112,7 @@ s21_vector<T> &s21_vector<T>::operator=(s21_vector<T> &&v) noexcept {
 }
 
 template <typename T>
-s21_vector<T>::reference s21_vector<T>::at(size_type pos) {
+typename s21_vector<T>::reference s21_vector<T>::at(size_type pos) {
   if (pos > size_) {
     throw std::out_of_range("vector::at - out of range");
   }
@@ -120,18 +120,20 @@ s21_vector<T>::reference s21_vector<T>::at(size_type pos) {
 }
 
 template <typename T>
-s21_vector<T>::reference s21_vector<T>::operator[](size_type pos) {
+typename s21_vector<T>::reference s21_vector<T>::operator[](size_type pos) {
   return data_[pos];
 }
 
-template <typename T> s21_vector<T>::const_reference s21_vector<T>::front() {
+template <typename T>
+typename s21_vector<T>::const_reference s21_vector<T>::front() {
   if (size_ == 0) {
     throw std::out_of_range("vector::front - vector is empty");
   }
   return data_[0];
 }
 
-template <typename T> s21_vector<T>::const_reference s21_vector<T>::back() {
+template <typename T>
+typename s21_vector<T>::const_reference s21_vector<T>::back() {
   if (size_ == 0) {
     throw std::out_of_range("vector::back - vector is empty");
   }
@@ -140,47 +142,49 @@ template <typename T> s21_vector<T>::const_reference s21_vector<T>::back() {
 
 template <typename T> T *s21_vector<T>::data() { return data_; }
 
-template <typename T> s21_vector<T>::iterator s21_vector<T>::begin() {
+template <typename T> typename s21_vector<T>::iterator s21_vector<T>::begin() {
   return data_;
 }
 
-template <typename T> s21_vector<T>::iterator s21_vector<T>::end() {
+template <typename T> typename s21_vector<T>::iterator s21_vector<T>::end() {
   return data_ + size_;
 }
 
 template <typename T> bool s21_vector<T>::empty() { return size_ == 0; }
 
-template <typename T> s21_vector<T>::size_type s21_vector<T>::size() {
+template <typename T> typename s21_vector<T>::size_type s21_vector<T>::size() {
   if (size_ == 0) {
-    throw std::out_of_range("vector::size - vector is empty")
+    throw std::out_of_range("vector::size - vector is empty");
   }
   return size_;
 }
 
-template <typename T> s21_vector<T>::size_type s21_vector<T>::max_size() {
-  return std::numeric_limits<size_type> max();
+template <typename T>
+typename s21_vector<T>::size_type s21_vector<T>::max_size() {
+  return std::numeric_limits<size_type>::max();
 }
 
 template <typename T> void s21_vector<T>::reserve(size_type size) {
   if (size <= capacity_) {
     throw std::out_of_range(
-        "vector::reserve - too large size for a new capacity")
+        "vector::reserve - too large size for a new capacity");
   }
   if (size > max_size()) {
-    throw std::length_error("vecto::reserve - impossible to allocate memory")
+    throw std::length_error("vecto::reserve - impossible to allocate memory");
   }
 
   iterator new_data = new value_type[size];
   for (size_type i = 0; i < size; i++) {
     new_data[i] = std::move(data_[i]);
   }
-  delete data_[];
+  delete[] data_;
 
   data_ = new_data;
   capacity_ = size;
 }
 
-template <typename T> s21_vector<T>::size_type s21_vector<T>::capacity() {
+template <typename T>
+typename s21_vector<T>::size_type s21_vector<T>::capacity() {
   return capacity_;
 }
 
@@ -188,47 +192,73 @@ template <typename T> void s21_vector<T>::shrink_to_fit() {
   if (size_ < capacity_) {
     iterator new_data = new value_type[size_];
     std::copy(data_, data_ + size_, new_data);
-    delete data_[];
+    delete[] data_;
     data_ = new_data;
     capacity_ = size_;
   }
 }
 template <typename T> void s21_vector<T>::clear() {
-  delete data_[];
+  delete[] data_;
   size_ = 0;
-  capacity = 0;
+  capacity_ = 0;
   data_ = nullptr;
 }
+
 template <typename T>
-s21_vector<T>::iterator s21_vector<T>::insert(iterator pos,
-                                              const_reference value) {
-  size_type current_position = pos - begin();
-  if (size_ > pos) {
+typename s21_vector<T>::iterator s21_vector<T>::insert(iterator pos,
+                                                       const_reference value) {
+  size_type index = pos - begin();
+  if (index > size_) {
     throw std::out_of_range(
-        "vector::insert - the insert position is out of memory range")
+        "vector::insert - the insert position is out of memory range");
   }
 
   size_type new_capacity = 1;
-  if (capacity_ <= size_) {
-    new_capacity = capacity * 2;
+  if (capacity_ == size_) {
+    new_capacity = capacity_ * 2;
   }
 
-  if (capacity_ >= size_) {
+  if (capacity_ <= size_) {
     reserve(new_capacity);
-    pos = begin() + current_position;
+    pos = begin() + index;
   }
 
   std::move_backward(pos, end(), end() + 1);
 
   *pos = value;
   size_++;
+
+  return pos;
 }
 
-template <typename T> void s21_vector<T>::erase(iterator pos) {}
+template <typename T> void s21_vector<T>::erase(iterator pos) {
+  if (empty()) {
+    throw std::out_of_range("vector::erase Vector is already empty!");
+  }
+  size_type index = pos - begin();
+  if (index > size_) {
+    throw std::out_of_range(
+        "vector::erase - the erase position is out of memory range");
+  }
+  std::move(pos + 1, end(), pos);
+  size_--;
+}
 
-template <typename T> void s21_vector<T>::push_back(const_reference value) {}
+template <typename T> void s21_vector<T>::push_back(const_reference value) {
+  if (capacity_ == size_) {
+    if (capacity_ != 0) {
+      reserve(capacity_ * 2);
+    } else
+      reserve(1);
+  }
+  data_[size_++] = value;
+}
 
-template <typename T> void s21_vector<T>::pop_back() {}
+template <typename T> void s21_vector<T>::pop_back() {
+  if (size != 0) {
+    --size;
+  }
+}
 
 template <typename T> void s21_vector<T>::swap(s21_vector &other) {
   std::swap(data_, other.data_);
